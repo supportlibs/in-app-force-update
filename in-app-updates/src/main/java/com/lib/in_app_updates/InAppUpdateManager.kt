@@ -17,11 +17,12 @@ import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 
-class InAppUpdateManager(activity: Activity,private val view: View) : InstallStateUpdatedListener {
+class InAppUpdateManager(activity: Activity, private val view: View) : InstallStateUpdatedListener {
 
     private var appUpdateManager: AppUpdateManager
     private val UPDATE_REQUEST_CODE = 500
     private var parentActivity: Activity = activity
+    private val sharedPreferencesManager = SharedPreferencesManager(activity)
 
     private var currentType = FLEXIBLE
 
@@ -29,6 +30,7 @@ class InAppUpdateManager(activity: Activity,private val view: View) : InstallSta
         appUpdateManager = AppUpdateManagerFactory.create(parentActivity)
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+
                 startUpdate(info, FLEXIBLE)
             } else {
                 // UPDATE IS NOT AVAILABLE
@@ -39,8 +41,11 @@ class InAppUpdateManager(activity: Activity,private val view: View) : InstallSta
 
 
     private fun startUpdate(info: AppUpdateInfo, type: Int) {
-        appUpdateManager.startUpdateFlowForResult(info, type, parentActivity, UPDATE_REQUEST_CODE)
-        currentType = type
+        if (sharedPreferencesManager.previousAskedForUpdate < System.currentTimeMillis() - 1000 * 3600 * 24) {
+            appUpdateManager.startUpdateFlowForResult(info, type, parentActivity, UPDATE_REQUEST_CODE)
+            currentType = type
+            sharedPreferencesManager.previousAskedForUpdate = System.currentTimeMillis()
+        }
     }
 
     fun onResume() {
