@@ -22,7 +22,6 @@ class InAppUpdateManager(activity: Activity, private val view: View) : InstallSt
     private var appUpdateManager: AppUpdateManager
     private val UPDATE_REQUEST_CODE = 500
     private var parentActivity: Activity = activity
-    private val sharedPreferencesManager = SharedPreferencesManager(activity)
 
     private var currentType = FLEXIBLE
 
@@ -39,13 +38,9 @@ class InAppUpdateManager(activity: Activity, private val view: View) : InstallSt
         appUpdateManager.registerListener(this)
     }
 
-
     private fun startUpdate(info: AppUpdateInfo, type: Int) {
-        if (sharedPreferencesManager.previousAskedForUpdate < System.currentTimeMillis() - 1000 * 3600 * 24) {
-            appUpdateManager.startUpdateFlowForResult(info, type, parentActivity, UPDATE_REQUEST_CODE)
-            currentType = type
-            sharedPreferencesManager.previousAskedForUpdate = System.currentTimeMillis()
-        }
+        appUpdateManager.startUpdateFlowForResult(info, type, parentActivity, UPDATE_REQUEST_CODE)
+        currentType = type
     }
 
     fun onResume() {
